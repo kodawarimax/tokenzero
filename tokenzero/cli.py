@@ -127,9 +127,10 @@ def main():
     # mcp (Model Context Protocol stdio server)
     subparsers.add_parser("mcp", help="Run TokenZero stdio MCP server for Cursor, Windsurf, Claude Desktop, and Cline")
 
-    # scaffold
-    scaffold_p = subparsers.add_parser("scaffold", help="Scaffold a production ICM workspace")
+    # scaffold (ICM dual-track: production vs lite)
+    scaffold_p = subparsers.add_parser("scaffold", help="Scaffold an ICM workspace (production 5-stage or lite 2-stage)")
     scaffold_p.add_argument("template", choices=["content", "sales", "system"], help="Workspace template type")
+    scaffold_p.add_argument("--mode", choices=["production", "lite"], default="production", help="ICM architecture mode: production (5-stage) or lite (2-stage lean)")
     scaffold_p.add_argument("--dest", type=str, default=".", help="Target directory")
 
     # gate: human approval check & approve
@@ -184,14 +185,15 @@ def main():
         t0_status = "PASS" if t0 and t0.get("result") == 500 else "FAIL"
         print(f"[{t0_status}] Tier 0 (Formula-First)  : {t0.get('elapsed_ms', 0)} ms")
         
-        # Ontology check
+        # Ontology check (Automated regression across all registered entities)
         try:
-            ont_ok = validate_action("Invoice", "apply_discount", {"amount": 100, "discount_rate": 0.1})
-            discounted = ont_ok.get("discounted_amount") or ont_ok.get("result_amount")
-            ont_status = "PASS" if discounted == 90 else "FAIL"
+            ont_inv = validate_action("Invoice", "apply_discount", {"amount": 100, "discount_rate": 0.1})
+            discounted = ont_inv.get("discounted_amount") or ont_inv.get("result_amount")
+            ont_task = validate_action("TaskState", "transition_state", {"task_id": "T-1", "current_status": "DRAFT", "next_status": "REVIEW"})
+            ont_status = "PASS" if discounted == 90 and ont_task.get("to_status") == "REVIEW" else "FAIL"
         except Exception:
             ont_status = "FAIL"
-        print(f"[{ont_status}] Ontology Layer (OAG)    : Verified")
+        print(f"[{ont_status}] Ontology Layer (OAG)    : Verified (Self-testing Invoice & TaskState invariants)")
         
         # Tier 1 LAYA check
         laya_cli = Path.home() / ".local" / "bin" / "laya-cascade"
@@ -227,14 +229,28 @@ def main():
     if args.command == "scaffold":
         dest_dir = Path(args.dest).resolve() / f"{args.template}-pipeline"
         dest_dir.mkdir(parents=True, exist_ok=True)
-        stages = ["00_contract", "01_intake", "02_execution", "03_review_gate", "04_output"]
-        for s in stages:
-            (dest_dir / s).mkdir(exist_ok=True)
-        with open(dest_dir / "AGENTS.md", "w") as f:
-            f.write(f"# ICM Workspace: {args.template.title()} Pipeline\n\n## 5-Stage Architecture\n" + "\n".join(f"- `{s}/`" for s in stages) + "\n")
-        with open(dest_dir / "CONTEXT.md", "w") as f:
-            f.write(f"# Router Context\nActive Template: {args.template}\nEnforce: One stage, one job. Human gate at 03_review_gate.\n")
-        print(f"[✓] Successfully scaffolded ICM workspace at: {dest_dir}")
+        mode = getattr(args, "mode", "production")
+
+        if mode == "lite":
+            stages = ["spec", "src"]
+            for s in stages:
+                (dest_dir / s).mkdir(exist_ok=True)
+            with open(dest_dir / "APPROVAL.json", "w") as f:
+                json.dump({"status": "PENDING", "template": args.template, "mode": "lite"}, f, indent=2)
+            with open(dest_dir / "AGENTS.md", "w") as f:
+                f.write(f"# ICM Lite Workspace: {args.template.title()}\n\n## 2-Stage Lean Architecture\n- `spec/`: Requirements & Specifications\n- `src/`: Code & Deliverables\n- `APPROVAL.json`: Human Gatekeeper\n")
+            with open(dest_dir / "CONTEXT.md", "w") as f:
+                f.write(f"# Router Context (ICM Lite)\nActive Template: {args.template}\nArchitecture: spec/ -> src/. Human review via APPROVAL.json.\n")
+            print(f"[✓] Successfully scaffolded Lean ICM workspace at: {dest_dir} (2-stage)")
+        else:
+            stages = ["00_contract", "01_intake", "02_execution", "03_review_gate", "04_output"]
+            for s in stages:
+                (dest_dir / s).mkdir(exist_ok=True)
+            with open(dest_dir / "AGENTS.md", "w") as f:
+                f.write(f"# ICM Workspace: {args.template.title()} Pipeline\n\n## 5-Stage Architecture\n" + "\n".join(f"- `{s}/`" for s in stages) + "\n")
+            with open(dest_dir / "CONTEXT.md", "w") as f:
+                f.write(f"# Router Context\nActive Template: {args.template}\nEnforce: One stage, one job. Human gate at 03_review_gate.\n")
+            print(f"[✓] Successfully scaffolded Production ICM workspace at: {dest_dir} (5-stage)")
         return
 
     if args.command == "gate-check":

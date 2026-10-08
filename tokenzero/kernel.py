@@ -333,24 +333,40 @@ def evaluate_regex(text: str):
     return None
 
 def evaluate_tier1_laya(task: str, candidates: list):
-    """Tier 1: ローカル近傍AI (LAYA) による型付き選択"""
+    """Tier 1: ローカル近傍AI (LAYA) または軽量ヒューリスティックによる型付き選択"""
     laya_cli = Path.home() / ".local" / "bin" / "laya-cascade"
-    if not laya_cli.exists():
-        return None
-    try:
-        import subprocess
-        payload = {"task": task, "candidates": candidates}
-        res = subprocess.run(
-            [str(laya_cli), "--json-input"],
-            input=json.dumps(payload, ensure_ascii=False),
-            capture_output=True,
-            text=True,
-            timeout=25,
-            check=True
-        )
-        return json.loads(res.stdout)
-    except Exception:
-        return None
+    if laya_cli.exists():
+        try:
+            import subprocess
+            payload = {"task": task, "candidates": candidates}
+            res = subprocess.run(
+                [str(laya_cli), "--json-input"],
+                input=json.dumps(payload, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                timeout=25,
+                check=True
+            )
+            return json.loads(res.stdout)
+        except Exception:
+            pass
+
+    # 軽量ヒューリスティック System 1（PyTorch / LAYA未導入環境向けのゼロ依存フォールバック）
+    import difflib
+    cand_texts = [c if isinstance(c, str) else c.get("text", "") for c in candidates]
+    matches = difflib.get_close_matches(task, cand_texts, n=1, cutoff=0.5)
+    if matches:
+        best_idx = cand_texts.index(matches[0])
+        ratio = difflib.SequenceMatcher(None, task, matches[0]).ratio()
+        return {
+            "tier": "Tier 1 (Heuristic System 1)",
+            "choice": str(best_idx),
+            "chosen_text": matches[0],
+            "confidence": round(ratio, 4),
+            "safe_high_confidence": ratio >= 0.75,
+            "engine": "Standard Library Heuristic"
+        }
+    return None
 
 def process_task(task: str, candidates: list = None):
     """
