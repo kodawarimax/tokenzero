@@ -32,6 +32,46 @@ flowchart TD
 
 ---
 
+## 🚀 インストール方法（どのマシンでも即時導入）
+
+### 方法 1: ワンライナー自動導入（推奨）
+macOS / Linux 対応。CLIバイナリの配備、PATH環境変数の自動設定、および **Claude Code / OpenAI Codex / Google Antigravity** へのスキル自動展開を一度に行います。
+
+```bash
+git clone https://github.com/kodawarimax/tokenzero.git
+cd tokenzero
+./install.sh
+```
+
+### 方法 2: pip / pipx による Python パッケージ導入
+```bash
+pip install .
+# または GitHubから直接インストール
+pip install git+https://github.com/kodawarimax/tokenzero.git
+
+# インストール後、各AIエージェントへスキルを一括展開
+tokenzero install-skills
+```
+
+### インストール診断
+```bash
+tokenzero doctor
+```
+
+---
+
+## 🤖 対応 AI エージェント（Claude Code / Codex / Antigravity）
+
+TokenZero は以下の主要 AI エージェント基盤に完全対応しています：
+
+| AI エージェント | スキル配備先 | 連携・実行方式 |
+| :--- | :--- | :--- |
+| **Claude Code** | `~/.claude/skills/tokenzero/` | Bash ツールから直接 `tokenzero run` / `ontology` 呼び出し |
+| **OpenAI Codex CLI** | `~/.codex/skills/tokenzero/` | シェル直撃実行 ＆ `AGENTS.md` 自動連携 |
+| **Google Antigravity** | `~/.gemini/antigravity/templates/skills/` | `run_command` ツールおよびワークスペーススキル連携 |
+
+---
+
 ## 🏛 3大コア理論（統合アーキテクチャ）
 
 ### 1. 武藤佳恭 理論（Formula-First / 固定式ファースト）
