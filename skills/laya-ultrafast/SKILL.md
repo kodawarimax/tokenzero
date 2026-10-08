@@ -68,7 +68,7 @@ jev-index --triage
 
 ## 4. 環境構成とロールバック
 
-* **Python環境**: `/Users/jungosakamoto/.codex/laya-venv/bin/python` (Python 3.12.12)
+* **Python環境**: `~/.codex/laya-venv/bin/python` (Python 3.12+)
 * **モデル本体**: `convaiinnovations/laya-multilingual` (SHA-256検証済みキャッシュ)
 * **元に戻す方法**:
   ```bash

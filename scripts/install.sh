@@ -49,4 +49,11 @@ deploy_skill "${GEMINI_SKILLS}"
 
 echo ""
 echo "=== TokenZero Installation Complete ==="
-echo "Verify with: tokenzero stats"
+if [[ ":$PATH:" != *":${TARGET_BIN}:"* ]]; then
+    echo ""
+    echo "[!] Notice: ${TARGET_BIN} is not in your PATH."
+    echo "    Add it to your shell configuration (~/.zshrc or ~/.bashrc):"
+    echo "    export PATH=\"\${HOME}/.local/bin:\$PATH\""
+fi
+echo "Verify with: tokenzero doctor"
+
