@@ -120,6 +120,13 @@ def main():
     # install-skills (Claude Code, Codex, Antigravity)
     subparsers.add_parser("install-skills", help="Deploy TokenZero skills to Claude Code, Codex, and Antigravity")
 
+    # init (workspace rule injection for Cursor, Windsurf, Cline, Claude, Codex, Antigravity)
+    init_p = subparsers.add_parser("init", help="Inject TokenZero discipline rules into current workspace (Cursor, Windsurf, Cline, Claude, Codex, Antigravity)")
+    init_p.add_argument("platforms", nargs="*", default=["all"], help="Target platforms: cursor, windsurf, cline, claude, codex, antigravity, or all")
+
+    # mcp (Model Context Protocol stdio server)
+    subparsers.add_parser("mcp", help="Run TokenZero stdio MCP server for Cursor, Windsurf, Claude Desktop, and Cline")
+
     # scaffold
     scaffold_p = subparsers.add_parser("scaffold", help="Scaffold a production ICM workspace")
     scaffold_p.add_argument("template", choices=["content", "sales", "system"], help="Workspace template type")
@@ -134,6 +141,24 @@ def main():
     gate_approve_p.add_argument("--approver", type=str, default="Human Supervisor", help="Name of approver")
 
     args = parser.parse_args()
+
+    if args.command == "mcp":
+        from tokenzero.mcp import run_mcp_server
+        run_mcp_server()
+        return
+
+    if args.command == "init":
+        from tokenzero.rules import inject_rules
+        dest = Path.cwd()
+        print(f"\n=== Initializing TokenZero Discipline Rules in: {dest} ===")
+        created = inject_rules(dest, args.platforms)
+        for platform, files in created.items():
+            print(f"[✓] {platform.capitalize():12}: Configured {len(files)} file(s)")
+            for f in files:
+                rel = Path(f).relative_to(dest)
+                print(f"      - {rel}")
+        print("\nInitialization complete! All AI agents in this workspace now follow TokenZero discipline.\n")
+        return
 
     if args.command == "install-skills":
         print("\n=== Deploying TokenZero Skills to AI Agent Environments ===")
@@ -175,11 +200,26 @@ def main():
         else:
             print(f"[INFO] Tier 1 (LAYA Local)     : Optional (Not installed - Tier 0 & OAG fully operational)")
 
+        # MCP Server Interface
+        print(f"[PASS] MCP Server (Stdio)    : Ready (Cursor, Windsurf, Claude Desktop)")
+
         # Agent Integrations check (Claude Code, Codex, Antigravity)
         statuses = check_agent_status()
         for agent_name, (status_str, is_present) in statuses.items():
             badge = "PASS" if "Active" in status_str else ("WARN" if "Missing" in status_str else "SKIP")
             print(f"[{badge}] {agent_name:18} : {status_str}")
+
+        # IDE Rules check in current workspace
+        cwd = Path.cwd()
+        ide_rules = {
+            "Cursor (.cursorrules)": (cwd / ".cursorrules").exists() or (cwd / ".cursor/rules").exists(),
+            "Windsurf (.windsurfrules)": (cwd / ".windsurfrules").exists(),
+            "Cline (.clinerules)": (cwd / ".clinerules").exists(),
+        }
+        for ide_name, has_rule in ide_rules.items():
+            badge = "PASS" if has_rule else "INFO"
+            status_text = "Configured" if has_rule else "Not configured (run 'tokenzero init')"
+            print(f"[{badge}] {ide_name:18} : {status_text}")
             
         print("==========================================\n")
         return

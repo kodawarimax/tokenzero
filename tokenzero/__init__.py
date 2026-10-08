@@ -14,6 +14,9 @@ from tokenzero.kernel import (
     evaluate_regex
 )
 
+from tokenzero.rules import inject_rules, TOKENZERO_DISCIPLINE_MARKDOWN
+from tokenzero.mcp import run_mcp_server
+
 __version__ = "0.2.0"
 
 __all__ = [
@@ -26,5 +29,8 @@ __all__ = [
     "evaluate_arithmetic",
     "evaluate_datetime",
     "evaluate_regex",
+    "inject_rules",
+    "TOKENZERO_DISCIPLINE_MARKDOWN",
+    "run_mcp_server",
     "__version__"
 ]

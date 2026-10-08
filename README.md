@@ -60,15 +60,50 @@ tokenzero doctor
 
 ---
 
-## 🤖 対応 AI エージェント（Claude Code / Codex / Antigravity）
+## 🌐 マルチプラットフォーム対応 ＆ 1秒ワークスペース初期化
 
-TokenZero は以下の主要 AI エージェント基盤に完全対応しています：
+TokenZero は、**Claude Code / Codex / Antigravity** だけでなく、**Cursor / Windsurf / Cline / Claude Desktop** などの主要 AI 開発プラットフォーム全般にワンコマンドで導入できます。
 
-| AI エージェント | スキル配備先 | 連携・実行方式 |
+### 1. 任意のプロジェクトで規律を一括注入 (`tokenzero init`)
+任意のプロジェクトディレクトリで以下を実行すると、各エージェント専用のルールファイル（`.cursorrules`, `.windsurfrules`, `.clinerules`, `CLAUDE.md`, `AGENTS.md`）が一撃で生成されます：
+
+```bash
+# 全プラットフォーム向けにルールを一括生成
+tokenzero init
+
+# 特定のプラットフォームのみ指定する場合
+tokenzero init cursor windsurf
+tokenzero init claude
+```
+
+### 2. Cursor / Windsurf / Claude Desktop 向け MCP 連携 (`tokenzero mcp`)
+TokenZero は標準で **Model Context Protocol (MCP)** サーバーを備えています。ターミナル実行を介さず、ネイティブの MCP ツールとして決定論的計算・オントロジー制約を実行可能です。
+
+- **Cursor 設定** (`Settings > MCP`):
+  - Type: `command`
+  - Command: `tokenzero`
+  - Arguments: `mcp`
+- **Claude Desktop 設定** (`claude_desktop_config.json`):
+  ```json
+  {
+    "mcpServers": {
+      "tokenzero": {
+        "command": "tokenzero",
+        "args": ["mcp"]
+      }
+    }
+  }
+  ```
+
+| プラットフォーム | 導入方法 | 主な連携形態 |
 | :--- | :--- | :--- |
-| **Claude Code** | `~/.claude/skills/tokenzero/` | Bash ツールから直接 `tokenzero run` / `ontology` 呼び出し |
-| **OpenAI Codex CLI** | `~/.codex/skills/tokenzero/` | シェル直撃実行 ＆ `AGENTS.md` 自動連携 |
-| **Google Antigravity** | `~/.gemini/antigravity/templates/skills/` | `run_command` ツールおよびワークスペーススキル連携 |
+| **Claude Code** | `tokenzero install-skills` / `init claude` | Bash ツール実行 ＋ `CLAUDE.md` 規律 |
+| **OpenAI Codex CLI** | `tokenzero install-skills` / `init codex` | シェル直撃 ＋ `AGENTS.md` 規律 |
+| **Google Antigravity** | `install.sh` / `.agent/skills/` | `run_command` ツール ＋ ワークスペースルール |
+| **Cursor IDE** | `tokenzero init cursor` または MCP | `.cursorrules` / `.cursor/rules/tokenzero.mdc` または MCPツール |
+| **Windsurf IDE** | `tokenzero init windsurf` または MCP | `.windsurfrules` または MCPツール |
+| **Cline / Roo Code** | `tokenzero init cline` または MCP | `.clinerules` または MCPツール |
+| **Python コード** | `import tokenzero` | LangChain / CrewAI / AutoGen のカスタムツール |
 
 ---
 
