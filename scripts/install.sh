@@ -5,11 +5,13 @@ set -e
 # TokenZero Engine Installer
 # ==============================================================================
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET_BIN="${HOME}/.local/bin"
 TARGET_LIB="${HOME}/.local/lib/tokenzero"
 CLAUDE_SKILLS="${HOME}/.claude/skills"
 CODEX_SKILLS="${HOME}/.agents/skills"
+CODEX_SKILLS_V2="${HOME}/.codex/skills"
+GEMINI_TEMPLATES="${HOME}/.gemini/antigravity/templates/skills"
 GEMINI_SKILLS="${HOME}/.agent/skills"
 
 echo "=== Installing TokenZero Engine ==="
@@ -41,6 +43,8 @@ deploy_skill() {
 
 deploy_skill "${CLAUDE_SKILLS}"
 deploy_skill "${CODEX_SKILLS}"
+deploy_skill "${CODEX_SKILLS_V2}"
+deploy_skill "${GEMINI_TEMPLATES}"
 deploy_skill "${GEMINI_SKILLS}"
 
 echo ""

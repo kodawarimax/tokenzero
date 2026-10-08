@@ -497,18 +497,28 @@ def main():
         print(f"[{t0_status}] Tier 0 (Formula-First)  : {t0.get('elapsed_ms', 0)} ms")
         # Ontology check
         try:
-            ont_ok = validate_action("Invoice", "apply_discount", {"amount": 100, "discount_rate": 0.1})
-            ont_status = "PASS" if ont_ok and ont_ok.get("result_amount") == 90 else "FAIL"
+            ont_ok = validate_action("Invoice", "apply_discount", {"amount": 100, "discount_rate": 0.1}) if validate_action else None
+            discounted = (ont_ok.get("discounted_amount") or ont_ok.get("result_amount")) if ont_ok else None
+            ont_status = "PASS" if discounted == 90 else "FAIL"
         except Exception:
             ont_status = "FAIL"
         print(f"[{ont_status}] Ontology Layer (OAG)    : Verified")
-        # Agent Harnessed check
-        claude_ok = (Path.home() / ".claude").exists()
-        codex_ok = (Path.home() / ".codex").exists()
-        gemini_ok = (Path.home() / ".gemini").exists()
-        print(f"[{'PASS' if claude_ok else 'SKIP'}] Claude Code Integration : {'Active' if claude_ok else 'Not installed'}")
-        print(f"[{'PASS' if codex_ok else 'SKIP'}] Codex CLI Integration   : {'Active' if codex_ok else 'Not installed'}")
-        print(f"[{'PASS' if gemini_ok else 'SKIP'}] Antigravity Integration  : {'Active' if gemini_ok else 'Not installed'}")
+        # Agent Harnessed check (environment + deployed skill detection)
+        claude_env = (Path.home() / ".claude").exists()
+        claude_skill = (Path.home() / ".claude" / "skills" / "tokenzero" / "SKILL.md").exists() or (Path.cwd() / ".claude" / "skills" / "tokenzero").exists()
+        claude_status = "Active" if claude_skill else ("Installed" if claude_env else "Not installed")
+
+        codex_env = (Path.home() / ".codex").exists()
+        codex_skill = (Path.home() / ".codex" / "skills" / "tokenzero" / "SKILL.md").exists() or (Path.home() / ".agents" / "skills" / "tokenzero" / "SKILL.md").exists()
+        codex_status = "Active" if codex_skill else ("Installed" if codex_env else "Not installed")
+
+        gemini_env = (Path.home() / ".gemini").exists() or (Path.home() / ".agent").exists()
+        gemini_skill = (Path.home() / ".gemini" / "antigravity" / "templates" / "skills" / "tokenzero" / "SKILL.md").exists() or (Path.cwd() / ".agent" / "skills" / "tokenzero" / "SKILL.md").exists()
+        gemini_status = "Active" if gemini_skill else ("Installed" if gemini_env else "Not installed")
+
+        print(f"[{'PASS' if claude_skill or claude_env else 'SKIP'}] Claude Code Integration : {claude_status}")
+        print(f"[{'PASS' if codex_skill or codex_env else 'SKIP'}] Codex CLI Integration   : {codex_status}")
+        print(f"[{'PASS' if gemini_skill or gemini_env else 'SKIP'}] Antigravity Integration  : {gemini_status}")
         print("==========================================\n")
         return
 

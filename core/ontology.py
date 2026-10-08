@@ -46,6 +46,7 @@ def validate_action(entity: str, action: str, params: Dict[str, Any]) -> Dict[st
                 "original_amount": amount,
                 "discount_rate": discount_rate,
                 "discounted_amount": discounted_amount,
+                "result_amount": discounted_amount,
                 "client_name": params.get("client_name", "Unknown")
             }
             
